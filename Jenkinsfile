@@ -8,10 +8,34 @@ pipeline {
                 git url:"https://github.com/rameshkumarvermagithub/django-notes-app.git", branch: "main"
             }
         }
+        stage('Static code analysis'){
+            steps{
+                script{  
+                    withSonarQubeEnv(credentialsId: 'sonarqube-api') { 
+                        sh 'mvn clean package sonar:sonar'
+                    }
+                   }
+                }
+            }
+            stage('Quality Gate Status'){
+                steps{
+                    script{  
+                        waitForQualityGate abortPipeline: false, credentialsId: 'sonarqube-api'
+                    }
+                }
+            }
         stage("Build"){
             steps {
                 echo "Building the image"
                 sh "docker build -t my-note-app ."
+            }
+        }
+        stage('Docker Image Scan: trivy '){
+            steps{
+                sh """   
+                 trivy image my-note-app > scan1.txt
+                 cat scan1.txt
+                 """
             }
         }
         stage("Push to Docker Hub"){
@@ -24,7 +48,7 @@ pipeline {
                 }
             }
         }
-        stage("Deploy"){
+        stage("Deploy with docker-compose"){
             steps {
                 echo "Deploying the container"
                 sh "docker-compose down && docker-compose up -d"
