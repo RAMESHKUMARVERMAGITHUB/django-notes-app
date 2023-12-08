@@ -8,22 +8,7 @@ pipeline {
                 git url:"https://github.com/rameshkumarvermagithub/django-notes-app.git", branch: "main"
             }
         }
-        stage('Static code analysis'){
-            steps{
-                script{  
-                    withSonarQubeEnv(credentialsId: 'sonarqube-api') { 
-                        sh 'mvn clean package sonar:sonar'
-                    }
-                   }
-                }
-            }
-            stage('Quality Gate Status'){
-                steps{
-                    script{  
-                        waitForQualityGate abortPipeline: false, credentialsId: 'sonarqube-api'
-                    }
-                }
-            }
+        
         stage("Build"){
             steps {
                 echo "Building the image"
